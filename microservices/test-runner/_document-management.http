@@ -1,0 +1,19 @@
+
+### current user
+GET https://localhost/api/users/currentuser
+Accept: application/json
+
+
+### sign out
+POST https://ticketing.dev/api/users/signout
+Content-Type: application/json
+
+{}
+
+### magic link login baby
+POST https://localhost/api/users/magiclogin-auth
+Content-Type: application/json
+
+{
+  "destination": "paschalidi@outlook.com"
+}

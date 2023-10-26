@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-label
+  template:
+    metadata:
+      labels:
+        app: auth-label
+    spec:
+      containers:
+        - name: auth
+          image: registry.digitalocean.com/clauseit/auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: auth-label
+  ports:
+    - name: auth
+      protocol: TCP
+      targetPort: 3000
+      port: 3000

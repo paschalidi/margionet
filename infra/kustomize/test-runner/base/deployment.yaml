@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-runner-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-runner-label
+  template:
+    metadata:
+      labels:
+        app: test-runner-label
+    spec:
+      containers:
+        - name: test-runner
+          image: registry.digitalocean.com/clauseit/test-runner
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-runner-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: test-runner-label
+  ports:
+    - name: test-runner
+      protocol: TCP
+      targetPort: 3000
+      port: 3000

@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+spec:
+  ingressClassName: 'nginx'
+  tls:
+    - hosts:
+        - 'www.clauseit.xyz'
+        - 'www.clauseit.com'
+      secretName: prod-tls
+  rules:
+    - host: 'www.clauseit.xyz'
+      http:
+        paths:
+          - path: /api/users/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-svc
+                port:
+                  number: 3000
+          - path: /?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: webapp-svc
+                port:
+                  number: 3000
+
+# https://linuxblog.xyz/posts/installing-nginx-ingress-digitalocean/
+#  helm install ingress-nginx ingress-nginx/ingress-nginx \
+#  --namespace ingress-nginx \
+#  --set controller.service.type=LoadBalancer \
+#  --set controller.service.externalTrafficPolicy=Local \
+#  --set controller.config.use-proxy-protocol="true" \
+#  --set-string controller.service.annotations."service\.beta\.kubernetes\.io/do-loadbalancer-enable-proxy-protocol"="true" \
+#  --set-string controller.service.annotations."service\.beta\.kubernetes\.io/do-loadbalancer-size-slug"="lb-small" \
+#  --set-string controller.service.annotations."service\.beta\.kubernetes\.io/do-loadbalancer-name"="clauseit-dev" \
+#  --set-string controller.service.annotations."service\.beta\.kubernetes\.io/do-loadbalancer-hostname"="www.clauseit.xyz"

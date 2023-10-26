@@ -1,0 +1,41 @@
+name: "Deploy: ingress"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/kustomize/ingress/**'
+      - '.github/workflows/deploy-ingress.yaml'
+
+jobs:
+  dev-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: |
+          doctl kubernetes cluster kubeconfig save --expiry-seconds 600 705259f0-911d-4e96-9667-d978525b9d24
+      - name: Deploy development env
+        run: |
+          kubectl kustomize $GITHUB_WORKSPACE/infra/kustomize/ingress/overlays/development | kubectl apply -f - -n development
+          kubectl rollout restart deployment -n ingress-nginx ingress-nginx-controller
+
+  prod-deploy:
+    needs: [ dev-deploy ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: |
+          doctl kubernetes cluster kubeconfig save --expiry-seconds 600 705259f0-911d-4e96-9667-d978525b9d24
+      - name: Deploy development env
+        run: |
+          kubectl kustomize $GITHUB_WORKSPACE/infra/kustomize/ingress/overlays/production | kubectl apply -f - --namespace=production
+          kubectl rollout restart deployment -n ingress-nginx ingress-nginx-controller

@@ -1,0 +1,57 @@
+name: "Deploy: test-runner"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-test-runner.yaml'
+      - 'microservices/test-runner/**'
+      - 'infra/kustomize/test-runner/**'
+
+jobs:
+  push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Push image to registry
+        run: |
+          doctl registry login --expiry-seconds 1200
+          docker build -t pdf-management $GITHUB_WORKSPACE/microservices/pdf-management
+          docker tag pdf-management registry.digitalocean.com/clauseit/pdf-management
+          docker push registry.digitalocean.com/clauseit/pdf-management
+
+  dev-deploy:
+    needs: [ push-image ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: |
+          doctl kubernetes cluster kubeconfig save --expiry-seconds 600 705259f0-911d-4e96-9667-d978525b9d24
+      - name: Deploy development env
+        run: |
+          kubectl kustomize $GITHUB_WORKSPACE/infra/kustomize/pdf-management/overlays/development | kubectl apply -f - --namespace=development
+          kubectl rollout restart deployment pdf-management-depl --namespace=development
+
+  prod-deploy:
+    needs: [ dev-deploy ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: |
+          doctl kubernetes cluster kubeconfig save --expiry-seconds 600 705259f0-911d-4e96-9667-d978525b9d24
+      - name: Deploy production env
+        run: |
+          kubectl kustomize $GITHUB_WORKSPACE/infra/kustomize/pdf-management/overlays/production | kubectl apply -f - --namespace=production
+          kubectl rollout restart deployment pdf-management-depl --namespace=production

@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: webapp-depl
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: webapp-depl
+      spec:
+        replicas: 1
+        strategy:
+          rollingUpdate:
+            maxUnavailable: 0
+        template:
+          spec:
+            containers:
+              - name: webapp
+                env:
+                  - name: NEXT_PUBLIC_API_URL
+                    value: 'www.clauseit.xyz'

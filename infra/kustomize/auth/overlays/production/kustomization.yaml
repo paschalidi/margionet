@@ -1,0 +1,82 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Deployment
+      name: auth-depl
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: auth-depl
+      spec:
+        replicas: 1
+        strategy:
+          rollingUpdate:
+            maxUnavailable: 0
+        template:
+          spec:
+            containers:
+              - name: auth
+                env:
+                  # FACEBOOK AUTH
+                  - name: FACEBOOK_CLIENT_ID
+                    value: "6632230590197574"
+                  - name: FACEBOOK_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: facebook-client-secret
+                        key: FACEBOOK_CLIENT_SECRET
+                  - name: FACEBOOK_CLIENT_CALLBACK
+                    value: "https://www.clauseit.com/api/users/facebook-auth/callback"
+                  
+                  # MAGIC LINK AUTH
+                  - name: MAGIC_LINK_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: magic-link-secret-prod
+                        key: MAGIC_LINK_SECRET_PROD
+                  - name: MAGIC_LINK_CALLBACK
+                    value: "/api/users/magiclogin-auth/callback"
+                  
+                  # GOOGLE AUTH
+                  - name: GOOGLE_CLIENT_ID
+                    value: "169871768941-f4l62nckjf90v36k5s9bsqs1i854qtjr.apps.googleusercontent.com"
+                  - name: GOOGLE_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: google-client-secret
+                        key: GOOGLE_CLIENT_SECRET
+                  - name: GOOGLE_CLIENT_CALLBACK
+                    value: "https://www.clauseit.com/api/users/google-auth/callback"
+                  
+                  # COOKIE SESSION
+                  - name: SESSION_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: session-secret-prod
+                        key: SESSION_SECRET_PROD
+                  
+                  # MONGO DB password is the same as local
+                  - name: MONGO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: mongo-db-password-dev-do # TODO change this to production 
+                        key: MONGO_DB_PASSWORD_DEV_DO # TODO change this to production
+                  - name: MONGO_DB_URI
+                    value: "mongodb+srv://doadmin:$(MONGO_DB_PASSWORD)@clauseit-development-96bc10d2.mongo.ondigitalocean.com/auth?tls=true&authSource=admin"
+                    
+                    # REDIS
+                  - name: REDIS_HOST
+                    value: auth-redis-svc
+                  - name: REDIS_PORT
+                    value: "6379"
+                  
+                  - name: SENDGRID_API_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: sendgrid-api-key
+                        key: SENDGRID_API_KEY

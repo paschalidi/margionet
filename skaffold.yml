@@ -1,0 +1,35 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+
+profiles:
+  - name: local
+    activation:
+    - kubeContext: docker-desktop
+    manifests:
+      kustomize:
+        paths:
+          - ./infra/kustomize/auth/overlays/local/
+          - ./infra/kustomize/test-runner/overlays/local/
+          - ./infra/kustomize/auth-redis/overlays/local/
+          - ./infra/kustomize/ingress/overlays/local/
+    build:
+      local:
+        push: false
+      artifacts:
+        - image: cpaschalidi/auth
+          context: ./microservices/auth
+          docker:
+            dockerfile: local.Dockerfile
+          sync:
+            manual:
+              - src: 'src/**/*.ts'
+                dest: .
+
+        - image: cpaschalidi/test-runner
+          context: ./microservices/test-runner
+          docker:
+            dockerfile: local.Dockerfile
+          sync:
+            manual:
+              - src: 'src/**/*.ts'
+                dest: .

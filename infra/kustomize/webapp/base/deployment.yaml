@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: registry.digitalocean.com/clauseit/webapp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: webapp
+  ports:
+    - name: webapp
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

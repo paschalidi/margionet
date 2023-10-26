@@ -1,0 +1,26 @@
+# Ignore node modules, we'll handle this in Docker
+node_modules/
+
+# Ignore development and build files
+.next/
+
+# Ignore logs
+*.log
+
+# Ignore the git directory
+.git/
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore Editor files
+.vscode/
+.idea/
+
+# Ignore testing and CI/CD related files
+__tests__/
+.jest/
+
+# Ignore environment files
+.env*

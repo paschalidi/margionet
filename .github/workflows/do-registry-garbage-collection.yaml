@@ -1,0 +1,21 @@
+name: Cleanup DigitalOcean Registry
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # Runs every day at midnight Eastern Standard Time (EST, which is UTC-5)
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Run Garbage Collection
+        run: | 
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          doctl registry garbage-collect --force

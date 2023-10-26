@@ -1,0 +1,80 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Deployment
+      name: auth-depl
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: auth-depl
+      spec:
+        template:
+          spec:
+            containers:
+              - name: auth
+                image: cpaschalidi/auth
+                env:
+                  # FACEBOOK AUTH
+                  - name: FACEBOOK_CLIENT_ID
+                    value: "6632230590197574"
+                  - name: FACEBOOK_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: facebook-client-secret
+                        key: FACEBOOK_CLIENT_SECRET
+                  - name: FACEBOOK_CLIENT_CALLBACK
+                    value: "https://localhost/api/users/facebook-auth/callback"
+                  
+                  # MAGIC LINK AUTH
+                  - name: MAGIC_LINK_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: magic-link-secret-local
+                        key: MAGIC_LINK_SECRET_LOCAL
+                  - name: MAGIC_LINK_CALLBACK
+                    value: "/api/users/magiclogin-auth/callback"
+                  
+                  # GOOGLE AUTH
+                  - name: GOOGLE_CLIENT_ID
+                    value: "169871768941-f4l62nckjf90v36k5s9bsqs1i854qtjr.apps.googleusercontent.com"
+                  - name: GOOGLE_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: google-client-secret
+                        key: GOOGLE_CLIENT_SECRET
+                  - name: GOOGLE_CLIENT_CALLBACK
+                    value: "https://localhost/api/users/google-auth/callback"
+                  
+                  # COOKIE SESSION 
+                  - name: SESSION_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: session-secret-local
+                        key: SESSION_SECRET_LOCAL
+                  
+                  # MONGO DB password is the same as dev
+                  # MONGO DB password is the same as dev
+                  - name: MONGO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: mongo-db-password-local-atlas
+                        key: MONGO_DB_PASSWORD_LOCAL_ATLAS
+                  - name: MONGO_DB_URI
+                    value: "mongodb+srv://development:$(MONGO_DB_PASSWORD)@clauseit-development.dkrg6to.mongodb.net/auth?retryWrites=true&w=majority"
+                  
+                  # REDIS
+                  - name: REDIS_HOST
+                    value: auth-redis-svc
+                  - name: REDIS_PORT
+                    value: "6379"
+                  
+                  - name: SENDGRID_API_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: sendgrid-api-key
+                        key: SENDGRID_API_KEY
